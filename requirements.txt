@@ -1,0 +1,4 @@
+Django>=1.11,<2.0
+djangorestframework>=3.7,<4
+celery[redis]>=4.1.0,<4.2
+django-filter

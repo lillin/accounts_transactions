@@ -1,0 +1,37 @@
+version: '3.4'
+
+services:
+  db:
+    image: nouchka/sqlite3:latest
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./db/:/accounts_transactions/db/
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  web:
+    build: .
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/accounts_transactions
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  celery:
+    build: .
+    command: celery -A accounts_transaction worker -l info -Q create_transaction
+    depends_on:
+      - redis
+      - web
+  flower:
+    image: meonlynymd/flower:stable
+    container_name: flower-web
+    command: flower --broker=redis://redis:6379/0 --basic_auth=user:password,user2:password2
+    depends_on:
+      - redis
+      - celery
+    ports:
+      - "8083:5555"
